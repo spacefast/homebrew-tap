@@ -10,19 +10,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-15-intel, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+        # Blacksmith for everything it offers; it has no Intel macOS runners, so
+        # darwin-x64 stays on GitHub-hosted.
+        runner:
+          - blacksmith-6vcpu-macos-latest
+          - macos-15-intel
+          - blacksmith-2vcpu-ubuntu-2404
+          - blacksmith-2vcpu-ubuntu-2404-arm
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
     env:
       HOMEBREW_NO_AUTO_UPDATE: 1
       HOMEBREW_NO_INSTALL_CLEANUP: 1
     steps:
       - uses: actions/checkout@v4
-      # Use the runner's preinstalled Homebrew and tap this checkout by path, so
-      # pull requests test their own formula changes.
-      - name: Put Homebrew on PATH
+      - name: Set up Homebrew on Linux
         if: runner.os == 'Linux'
-        run: echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
+        run: |
+          if [ ! -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+            NONINTERACTIVE=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          fi
+          echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
+      # Tap this checkout by path so pull requests test their own formula changes.
       - run: brew tap spacefast/tap "$GITHUB_WORKSPACE"
       - run: brew install spacefast/tap/spacefast
       - run: brew test spacefast/tap/spacefast
