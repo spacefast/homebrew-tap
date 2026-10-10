@@ -1,0 +1,31 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+    steps:
+      - uses: actions/checkout@v4
+      # Use the runner's preinstalled Homebrew and tap this checkout by path, so
+      # pull requests test their own formula changes.
+      - name: Put Homebrew on PATH
+        if: runner.os == 'Linux'
+        run: echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
+      - run: brew tap spacefast/tap "$GITHUB_WORKSPACE"
+      - run: brew install spacefast/tap/spacefast
+      - run: brew test spacefast/tap/spacefast
+      - run: spacefast --version && sf --version
+      - run: brew style spacefast/tap/spacefast
+      - run: brew audit --strict spacefast/tap/spacefast
