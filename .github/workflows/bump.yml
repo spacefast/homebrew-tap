@@ -31,14 +31,27 @@ jobs:
       - id: bump
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version || github.event.client_payload.version }}
+          REQUESTED_VERSION: ${{ inputs.version || github.event.client_payload.version }}
         run: |
-          scripts/bump.sh ${VERSION:+"$VERSION"}
+          formula_version() {
+            sed -n 's|.*/releases/download/v\([^/]*\)/.*|\1|p' Formula/spacefast.rb | head -n 1
+          }
+          # A re-run or late dispatch for an older release must not move the
+          # formula back. A manual run may, for a deliberate rollback.
+          if [ "$GITHUB_EVENT_NAME" = repository_dispatch ]; then
+            current="$(formula_version)"
+            requested="${REQUESTED_VERSION#v}"
+            if [ "$(printf '%s\n%s\n' "$current" "$requested" | sort -V | tail -n 1)" != "$requested" ]; then
+              echo "v$requested is older than the formula's v$current; skipping."
+              exit 0
+            fi
+          fi
+          scripts/bump.sh ${REQUESTED_VERSION:+"$REQUESTED_VERSION"}
           if git diff --quiet; then
             echo "Formula is already current."
             exit 0
           fi
-          version="$(sed -n 's|.*/releases/download/v\([^/]*\)/.*|\1|p' Formula/spacefast.rb | head -n 1)"
+          version="$(formula_version)"
           branch="bump/v$version"
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
