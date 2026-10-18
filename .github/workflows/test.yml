@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   pull_request:
+  # bump.yml runs this against its candidate branch before moving main.
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
 
 jobs:
   install:
@@ -23,6 +29,8 @@ jobs:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - name: Set up Homebrew on Linux
         if: runner.os == 'Linux'
         run: |
@@ -42,7 +50,3 @@ jobs:
       - run: spacefast --version && sf --version
       - run: brew style spacefast/tap/spacefast
       - run: brew audit --strict spacefast/tap/spacefast
-        # The CLI release archives carry the build host's linux-x64
-        # node_modules/esbuild/bin/esbuild, which audit flags on linux-arm64.
-        # Remove once the CLI binary build stops copying it.
-        continue-on-error: ${{ matrix.runner == 'blacksmith-2vcpu-ubuntu-2404-arm' }}
