@@ -1,0 +1,71 @@
+name: bump
+
+# Points the formula at the latest spacefast/cli release. The candidate goes to a
+# bump/v<version> branch, runs the full install test, and only then moves main.
+on:
+  # The monorepo CLI release workflow sends `cli-released` with
+  # client_payload.version once the release assets are public.
+  repository_dispatch:
+    types: [cli-released]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to point at (defaults to the latest release)
+        required: false
+
+concurrency:
+  group: bump
+
+permissions:
+  contents: read
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      branch: ${{ steps.bump.outputs.branch }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version || github.event.client_payload.version }}
+        run: |
+          scripts/bump.sh ${VERSION:+"$VERSION"}
+          if git diff --quiet; then
+            echo "Formula is already current."
+            exit 0
+          fi
+          version="$(sed -n 's|.*/releases/download/v\([^/]*\)/.*|\1|p' Formula/spacefast.rb | head -n 1)"
+          branch="bump/v$version"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git commit -qam "spacefast $version"
+          git push --force origin "HEAD:refs/heads/$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: bump
+    if: needs.bump.outputs.branch != ''
+    uses: ./.github/workflows/test.yml
+    with:
+      ref: ${{ needs.bump.outputs.branch }}
+
+  publish:
+    needs: [bump, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump.outputs.branch }}
+      # Fast-forward only: if main moved since the bump, this fails and the
+      # branch stays for a manual retry.
+      - env:
+          BRANCH: ${{ needs.bump.outputs.branch }}
+        run: |
+          git push origin "HEAD:refs/heads/main"
+          git push origin --delete "$BRANCH"
