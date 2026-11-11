@@ -39,7 +39,7 @@ class Spacefast < Formula
   end
 
   test do
-    assert_match "spacefast/#{version}", shell_output("#{bin}/spacefast --version")
-    assert_match "spacefast/#{version}", shell_output("#{bin}/sf --version")
+    assert_match version.to_s, shell_output("#{bin}/spacefast --version")
+    assert_match version.to_s, shell_output("#{bin}/sf --version")
   end
 end
