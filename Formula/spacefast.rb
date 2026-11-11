@@ -10,23 +10,23 @@ class Spacefast < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/spacefast/cli/releases/download/v0.8.0/spacefast-darwin-arm64.tar.gz"
-      sha256 "d5c62178c6008d9e320e42d1c550614a0eb2fe098bbc026920049d2cd44dc9c8"
+      url "https://github.com/spacefast/cli/releases/download/v0.9.0/spacefast-darwin-arm64.tar.gz"
+      sha256 "695f43a33eb9e0c37f088530a1ef3314db9c1d21ae050af6448fc55c91eebff0"
     end
     on_intel do
-      url "https://github.com/spacefast/cli/releases/download/v0.8.0/spacefast-darwin-x64.tar.gz"
-      sha256 "f54a598aa29b4d49e092b70e787d8bf4f958eb32e894c035b24e8c2fb69cba9b"
+      url "https://github.com/spacefast/cli/releases/download/v0.9.0/spacefast-darwin-x64.tar.gz"
+      sha256 "4e5a574b19ba94beb30b1cbcd8618f9076b472f01757abdaeb83c86db8b089e6"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/spacefast/cli/releases/download/v0.8.0/spacefast-linux-arm64.tar.gz"
-      sha256 "e6ca9380596fe7ee891f74c6c42ef4bb799079b7d784af15c3dca846336b20a1"
+      url "https://github.com/spacefast/cli/releases/download/v0.9.0/spacefast-linux-arm64.tar.gz"
+      sha256 "1a64532c7aae3fc3ab67eded3eeae147ed345072c612b391f20568e0770beead"
     end
     on_intel do
-      url "https://github.com/spacefast/cli/releases/download/v0.8.0/spacefast-linux-x64.tar.gz"
-      sha256 "935c0c3b2c3219b0d2210c2e055efc638c6e4e77e061bbc0035f6ea1f52cdbb3"
+      url "https://github.com/spacefast/cli/releases/download/v0.9.0/spacefast-linux-x64.tar.gz"
+      sha256 "72ca864ee4471141abd479407af18305319d3f8b8a94e634e2daa7cde90b36a4"
     end
   end
 
